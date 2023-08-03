@@ -9,7 +9,7 @@ class Piece(ABC):
         self.surface = surface
 
     def draw(self, screen):
-        self.screen.blit(self.surface, (self.x, self.y))
+        screen.blit(self.surface, (self.x, self.y))
 
     def get_possible_moves():
         pass
