@@ -13,7 +13,7 @@ class ImagesLoader():
         BOARD_IMG = image.load(current_dir + "/ChessEngine/Assets/board.png")
         self.BOARD = transform.scale(BOARD_IMG, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-        pieces = ["bishop", "king", "knight", "pawn", "queen", "roock"]
+        pieces = ["bishop", "king", "knight", "pawn", "queen", "rook"]
         #* Czarne bierki
         self.BLACK_PIECES = {piece : self.load_and_transform(current_dir + f"/ChessEngine/Assets/black_{piece}.png") for piece in pieces}
         #* Biale bierki

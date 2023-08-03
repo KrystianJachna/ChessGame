@@ -29,7 +29,7 @@ class Queen(Piece):
     def get_possible_moves():
         pass
 
-class Roock(Piece):
+class Rook(Piece):
     def __init__(self, x, y, surface) -> None:
         super().__init__(x, y, surface)
 
