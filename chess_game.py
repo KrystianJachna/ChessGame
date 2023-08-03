@@ -38,6 +38,7 @@ def main():
         #todo sprawdzanie stanu gry (szach, mat, pat, ...)
         
         #todo rysowanie planszy i figur
+        board.draw_board(screen)
         pygame.display.flip()
 
         clock.tick(FPS)
