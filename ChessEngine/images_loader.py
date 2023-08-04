@@ -22,5 +22,3 @@ class ImagesLoader():
     def load_and_transform(self, image_path, width = 100, height = 100):
         img = image.load(image_path)
         return transform.scale(img, (width, height))
-    
-t = ImagesLoader()
