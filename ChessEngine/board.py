@@ -2,6 +2,7 @@
 
 from ChessEngine.images_loader import ImagesLoader
 import ChessEngine.piece as Piece
+from copy import copy
 
 import pygame
 
@@ -56,7 +57,16 @@ class Board():
 
     #* Zwraca bierke na polu x, y
     def get_piece(self, x:int, y:int) -> Piece:
-        return self.board[self.get_field(x, y)][1][0]
+        if self.board[self.get_field(x, y)][1]:
+            return self.board[self.get_field(x, y)][1][0]
+        return None
+    
+     #* Zwraca bierke na polu 'field'
+    def get_piece_by_field(self, field : str) -> Piece:
+        if self.board[field][1]:
+            return self.board[field][1][0]
+        return None
+    
 
     #* Zwraca oznaczenie pola np a1, a2, ... w zaleznosci od wspolrzednych
     def get_field(self, x:int, y:int) -> str:
@@ -99,7 +109,7 @@ class Board():
             raise IndexError("Out of bounds mouse click!")
         return letter + number
 
-    #* Zwraca kolor bierki na polu
+    #* Zwraca kolor bierki na polu x, y
     def get_piece_color(self, x:int, y:int) -> str | None:
         if self.board[self.get_field(x, y)][1]:
             return self.board[self.get_field(x, y)][1][1]
@@ -124,6 +134,22 @@ class Board():
         highlight_surface = pygame.Surface((field_size, field_size), pygame.SRCALPHA)
         pygame.draw.circle(highlight_surface, highlight_color, (field_size // 5, field_size // 5), field_size // 5)
         self.screen.blit(highlight_surface, (center_x,  center_y))
+    
+    def highlight_possible_beat(self, field:str) -> None:
+        highlight_color = (169, 169, 169, 100)  # szary
+        field_size = 102
+        x, y = self.board[field][0]
+        center_x, center_y = x + field_size // 2 - field_size // 2, y + field_size // 2 - field_size // 2
+
+        highlight_surface = pygame.Surface((field_size, field_size), pygame.SRCALPHA)
+        pygame.draw.circle(highlight_surface, highlight_color, (field_size // 2, field_size // 2), field_size // 2)
+
+        # rysowanie mniejszego kola w celu wycieccia srodka
+        inner_radius = field_size // 2 - field_size // 6
+        inner_color = (0, 0, 0, 0)  
+        pygame.draw.circle(highlight_surface, inner_color, (field_size // 2, field_size // 2), inner_radius)
+
+        self.screen.blit(highlight_surface, (center_x, center_y))
 
     def is_free(self, field: str) -> bool:
         return self.board is None
@@ -132,7 +158,7 @@ class Board():
         #* specjalna obsluga piona
         if isinstance(self.board[prev_field][1][0], Piece.WhitePawn) or isinstance(self.board[prev_field][1][0], Piece.BlackPawn):
             self.board[prev_field][1][0].first_move = False
-        self.board[to_field][1] = self.board[prev_field][1]
+        self.board[to_field][1] = copy(self.board[prev_field][1])
         x,y = self.board[to_field][0]
         self.board[to_field][1][0].change_pos(x,y)
         self.board[prev_field][1] = None
@@ -143,6 +169,9 @@ def draw_window(board: pygame.display, highlight_field:bool, x:int, y:int, piece
         board.highlight_field(x,y) 
     board.draw_pieces()
     if piece:
-        for field in piece.get_possible_moves(board.get_field(x,y)):
+        possible_moves, possible_beatings = piece.get_possible_moves(board.get_field(x,y), board)
+        for field in possible_moves:
             board.highlight_possible_move(field)
+        for field in possible_beatings:
+            board.highlight_possible_beat(field)
 
