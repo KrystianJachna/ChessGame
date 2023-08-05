@@ -57,8 +57,40 @@ class Rook(Piece):
     def __init__(self, x : int, y : int, surface_to_draw : Surface) -> None:
         super().__init__(x, y, surface_to_draw)
 
-    def get_possible_moves():
-        pass
+    def get_possible_moves(self, current_field, board) -> tuple[list[str], list[str]]:
+        i, j = self.find_pos(current_field)
+        possible_moves = []
+        possible_beatings = []
+
+        for index in range(j + 1, 9):
+            if board.get_piece_by_field(self.get_field(i, index)) is None:
+                possible_moves.append(self.get_field(i, index))
+            else:
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i,index)):
+                    possible_beatings.append(self.get_field(i, index))
+                break
+        for index in range(j - 1, 0, -1):
+            if board.get_piece_by_field(self.get_field(i, index)) is None:
+                possible_moves.append(self.get_field(i, index))
+            else:
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i,index)):
+                    possible_beatings.append(self.get_field(i, index))
+                break
+        for index in range(i + 1, 9):
+            if board.get_piece_by_field(self.get_field(index, j)) is None:
+                possible_moves.append(self.get_field(index, j))
+            else:
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(index, j)):
+                    possible_beatings.append(self.get_field(index, j))
+                break
+        for index in range(i - 1, 0, -1):
+            if board.get_piece_by_field(self.get_field(index, j)) is None:
+                possible_moves.append(self.get_field(index, j))
+            else:
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(index, j)):
+                    possible_beatings.append(self.get_field(index, j))
+                break
+        return possible_moves, possible_beatings
 
 class Bishop(Piece):
     def __init__(self, x : int, y : int, surface_to_draw : Surface) -> None:
