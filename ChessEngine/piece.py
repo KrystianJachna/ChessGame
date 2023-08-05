@@ -71,10 +71,44 @@ class Knight(Piece):
     def __init__(self, x : int, y : int, surface_to_draw : Surface) -> None:
         super().__init__(x, y, surface_to_draw)
 
-    def get_possible_moves():
-        pass
+    def get_possible_moves(self, current_field, board) -> tuple[list[str], list[str]]:
+        i, j = self.find_pos(current_field)
+        all_moves = []
 
-#todo bicia
+        if i - 1 in range(1,9):
+            if j + 2 in range(1,9):
+                all_moves.append(self.get_field(i-1, j+2))
+            if j - 2 in range(1,9):
+                all_moves.append(self.get_field(i-1, j-2))
+        if i + 1 in range(1,9):
+            if j + 2 in range(1,9):
+                all_moves.append(self.get_field(i+1, j+2))
+            if j - 2 in range(1,9):
+                all_moves.append(self.get_field(i+1, j-2))
+        if i - 2 in range(1,9):
+            if j + 1 in range(1,9):
+                all_moves.append(self.get_field(i-2, j+1))
+            if j - 1 in range(1,9):
+                all_moves.append(self.get_field(i-2, j-1))
+        if i + 2 in range(1,9):
+            if j + 1 in range(1,9):
+                all_moves.append(self.get_field(i+2, j+1))
+            if j - 1 in range(1,9):
+                all_moves.append(self.get_field(i+2, j-1))
+
+        possible_moves = []
+        possible_beatings = []
+
+        for move in all_moves:
+            if board.get_piece_by_field(move) is None:
+                possible_moves.append(move)
+            else:
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(move):
+                    possible_beatings.append(move)
+
+        return possible_moves, possible_beatings
+
+#todo bicie w przelocie na pierwszym, promocja
 class BlackPawn(Piece):
     def __init__(self, x : int, y : int, surface_to_draw : Surface) -> None:
         super().__init__(x, y, surface_to_draw)
@@ -85,7 +119,7 @@ class BlackPawn(Piece):
         possible_moves = []
         possible_beatings = []
         
-        if self.first_move:     #todo bicie w przelocie na pierwszym, promocja
+        if self.first_move:     
             #* Mozliwe ruchy
             if j-1 in range(1,9) and board.get_piece_by_field(self.get_field(i, j-1)) is None:
                 possible_moves.append(self.get_field(i, j-1))
@@ -93,7 +127,7 @@ class BlackPawn(Piece):
                     possible_moves.append(self.get_field(i, j-2))
             #* Mozliwe bicia
             if i+1 in range(1,9) and j-1 in range(1,9) and board.get_piece_by_field(self.get_field(i+1,j-1)) is not None:
-                possible_beatings.append(self.get_field(i+1,j+1))
+                possible_beatings.append(self.get_field(i+1,j-1))
             if i-1 in range(1,9) and j-1 in range(1,9) and board.get_piece_by_field(self.get_field(i-1,j-1)) is not None:
                 possible_beatings.append(self.get_field(i-1,j-1))
         else:
@@ -108,19 +142,19 @@ class BlackPawn(Piece):
         return possible_moves, possible_beatings
 
 
-
+#todo bicie w przelocie na pierwszym, promocja
 class WhitePawn(Piece):
     def __init__(self, x : int, y : int, surface_to_draw : Surface) -> None:
         super().__init__(x, y, surface_to_draw)
         self.first_move : bool = True
-        self.passant : bool = False         #todo bicie w przelocie
+        self.passant : bool = False         
 
     def get_possible_moves(self, current_field, board) -> tuple[list[str], list[str]]:
         i,j = self.find_pos(current_field)
         possible_moves = []
         possible_beatings = []
         
-        if self.first_move:     #todo bicie w przelocie na pierwszym, promocja
+        if self.first_move:     
             #* Mozliwe ruchy
             if j+1 in range(1,9) and board.get_piece_by_field(self.get_field(i, j+1)) is None:
                 possible_moves.append(self.get_field(i, j+1))

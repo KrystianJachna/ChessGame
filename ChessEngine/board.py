@@ -114,6 +114,12 @@ class Board():
         if self.board[self.get_field(x, y)][1]:
             return self.board[self.get_field(x, y)][1][1]
         return None
+    
+    #* Zwraca kolor bierki na polu x, y
+    def get_piece_color_by_field(self, field:str) -> str | None:
+        if self.board[field][1]:
+            return self.board[field][1][1]
+        return None
         
     def highlight_field(self, x:int, y:int) -> None:
         highlight_color = (255, 255, 0) # zolty
