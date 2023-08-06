@@ -32,7 +32,7 @@ class Piece(ABC):
         return self.board_fields[i][j]
 
     @abstractmethod
-    def get_possible_moves(self, current_field:str, board) -> list[str]:
+    def get_possible_moves(self, current_field:str, board) -> tuple[list[str], list[str]]:
         pass
 
     def check_if_free(board) -> bool:
@@ -43,15 +43,75 @@ class King(Piece):
     def __init__(self, x : int, y : int, surface_to_draw : Surface) -> None:
         super().__init__(x, y, surface_to_draw)
 
-    def get_possible_moves():
-        pass
+    #todo unikanie ruchow narazajacych na szacha, roszada
+    def get_possible_moves(self, current_field, board) -> tuple[list[str], list[str]]:
+        i, j = self.find_pos(current_field)
         
+        possible_moves = []
+        possible_beatings = []
+
+        if j + 1 in range(1, 9):
+            if i - 1 in range(1, 9):
+                if board.get_piece_by_field(self.get_field(i -1 , j + 1)) is None:
+                    possible_moves.append(self.get_field(i-1, j + 1))
+                else:
+                    if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i-1,j+1)):
+                        possible_beatings.append(self.get_field(i-1, j + 1))
+            if i + 1 in range(1, 9):
+                if board.get_piece_by_field(self.get_field(i +1 , j + 1)) is None:
+                    possible_moves.append(self.get_field(i+1, j + 1))
+                else:
+                    if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i+1,j+1)):
+                        possible_beatings.append(self.get_field(i+1, j + 1))
+            if board.get_piece_by_field(self.get_field(i  , j + 1)) is None:
+                possible_moves.append(self.get_field(i, j + 1))
+            else:
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i,j+1)):
+                    possible_beatings.append(self.get_field(i, j + 1))
+        if j - 1 in range(1, 9):
+            if i - 1 in range(1, 9):
+                if board.get_piece_by_field(self.get_field(i -1 , j - 1)) is None:
+                    possible_moves.append(self.get_field(i-1, j -1))
+                else:
+                    if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i-1,j-1)):
+                        possible_beatings.append(self.get_field(i-1, j - 1))
+            if i + 1 in range(1, 9):
+                if board.get_piece_by_field(self.get_field(i +1 , j - 1)) is None:
+                    possible_moves.append(self.get_field(i+1, j - 1))
+                else:
+                    if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i+1,j-1)):
+                        possible_beatings.append(self.get_field(i+1, j - 1))
+            if board.get_piece_by_field(self.get_field(i  , j -1)) is None:
+                possible_moves.append(self.get_field(i, j - 1))
+            else:
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i,j-1)):
+                    possible_beatings.append(self.get_field(i, j - 1))
+        if i - 1 in range(1, 9):
+                if board.get_piece_by_field(self.get_field(i -1 , j)) is None:
+                    possible_moves.append(self.get_field(i-1, j))
+                else:
+                    if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i-1,j)):
+                        possible_beatings.append(self.get_field(i-1, j))
+        if i + 1 in range(1, 9):
+            if board.get_piece_by_field(self.get_field(i +1 , j)) is None:
+                possible_moves.append(self.get_field(i+1, j))
+            else:
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i+1,j)):
+                    possible_beatings.append(self.get_field(i+1, j))
+        return possible_moves, possible_beatings
+
 class Queen(Piece):
     def __init__(self, x : int, y : int, surface_to_draw : Surface) -> None:
         super().__init__(x, y, surface_to_draw)
 
-    def get_possible_moves():
-        pass
+    def get_possible_moves(self, current_field, board) -> tuple[list[str], list[str]]:
+        tmp = Rook(self.x, self.y, self.surface_to_draw)
+        rook_moves, rook_beatings = tmp.get_possible_moves(current_field, board)
+        
+        tmp = Bishop(self.x, self.y, self.surface_to_draw)
+        bishop_moves, bishop_beatings = tmp.get_possible_moves(current_field, board)
+
+        return rook_moves + bishop_moves, rook_beatings + bishop_beatings
 
 class Rook(Piece):
     def __init__(self, x : int, y : int, surface_to_draw : Surface) -> None:
@@ -96,8 +156,62 @@ class Bishop(Piece):
     def __init__(self, x : int, y : int, surface_to_draw : Surface) -> None:
         super().__init__(x, y, surface_to_draw)
 
-    def get_possible_moves():
-        pass
+    def get_possible_moves(self, current_field, board) -> tuple[list[str], list[str]]:
+        i, j = self.find_pos(current_field)
+
+        possible_moves = []
+        possible_beatings = []
+
+        next_i = i + 1
+        next_j = j + 1
+
+        while next_i in range(1,9) and next_j in range(1,9):
+            if board.get_piece_by_field(self.get_field(next_i, next_j)) is None:
+                possible_moves.append(self.get_field(next_i, next_j))
+            else:
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(next_i, next_j)):
+                    possible_beatings.append(self.get_field(next_i, next_j))
+                break
+            next_i += 1
+            next_j += 1
+        
+        next_i = i - 1
+        next_j = j - 1
+        while next_i in range(1,9) and next_j in range(1,9):
+            if board.get_piece_by_field(self.get_field(next_i, next_j)) is None:
+                possible_moves.append(self.get_field(next_i, next_j))
+            else:
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(next_i, next_j)):
+                    possible_beatings.append(self.get_field(next_i, next_j))
+                break
+            next_i -= 1
+            next_j -= 1
+
+        next_i = i + 1
+        next_j = j - 1
+        while next_i in range(1,9) and next_j in range(1,9):
+            if board.get_piece_by_field(self.get_field(next_i, next_j)) is None:
+                possible_moves.append(self.get_field(next_i, next_j))
+            else:
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(next_i, next_j)):
+                    possible_beatings.append(self.get_field(next_i, next_j))
+                break
+            next_i += 1
+            next_j -= 1
+
+        next_i = i - 1
+        next_j = j + 1
+        while next_i in range(1,9) and next_j in range(1,9):
+            if board.get_piece_by_field(self.get_field(next_i, next_j)) is None:
+                possible_moves.append(self.get_field(next_i, next_j))
+            else:
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(next_i, next_j)):
+                    possible_beatings.append(self.get_field(next_i, next_j))
+                break
+            next_i -= 1
+            next_j += 1
+        return possible_moves, possible_beatings
+
 
 class Knight(Piece):
     def __init__(self, x : int, y : int, surface_to_draw : Surface) -> None:
@@ -159,18 +273,22 @@ class BlackPawn(Piece):
                     possible_moves.append(self.get_field(i, j-2))
             #* Mozliwe bicia
             if i+1 in range(1,9) and j-1 in range(1,9) and board.get_piece_by_field(self.get_field(i+1,j-1)) is not None:
-                possible_beatings.append(self.get_field(i+1,j-1))
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i+1, j-1)):
+                    possible_beatings.append(self.get_field(i+1,j-1))
             if i-1 in range(1,9) and j-1 in range(1,9) and board.get_piece_by_field(self.get_field(i-1,j-1)) is not None:
-                possible_beatings.append(self.get_field(i-1,j-1))
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i-1, j-1)):
+                    possible_beatings.append(self.get_field(i-1,j-1))
         else:
             #* Mozliwe ruchy
             if j-1 in range(1,9) and board.get_piece_by_field(self.get_field(i, j-1)) is None:
                 possible_moves.append(self.get_field(i, j-1))
             #* Mozliwe bicia
             if i+1 in range(1,9) and j-1 in range(1,9) and board.get_piece_by_field(self.get_field(i+1,j-1)) is not None:
-                possible_beatings.append(self.get_field(i+1,j-1))
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i+1, j-1)):
+                    possible_beatings.append(self.get_field(i+1,j-1))
             if i-1 in range(1,9) and j-1 in range(1,9) and board.get_piece_by_field(self.get_field(i-1,j-1)) is not None:
-                possible_beatings.append(self.get_field(i-1,j-1))
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i+1, j-1)):
+                    possible_beatings.append(self.get_field(i-1,j-1))
         return possible_moves, possible_beatings
 
 
@@ -194,17 +312,21 @@ class WhitePawn(Piece):
                     possible_moves.append(self.get_field(i, j+2))
             #* Mozliwe bicia
             if i+1 in range(1,9) and j+1 in range(1,9) and board.get_piece_by_field(self.get_field(i+1,j+1)) is not None:
-                possible_beatings.append(self.get_field(i+1,j+1))
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i+1, j+1)):
+                    possible_beatings.append(self.get_field(i+1,j+1))
             if i-1 in range(1,9) and j+1 in range(1,9) and board.get_piece_by_field(self.get_field(i-1,j+1)) is not None:
-                possible_beatings.append(self.get_field(i-1,j+1))
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i-1, j+1)):
+                    possible_beatings.append(self.get_field(i-1,j+1))
         else:
             #* Mozliwe ruchy
             if j+1 in range(1,9) and board.get_piece_by_field(self.get_field(i, j+1)) is None:
                 possible_moves.append(self.get_field(i, j+1))
             #* Mozliwe bicia
             if i+1 in range(1,9) and j+1 in range(1,9) and board.get_piece_by_field(self.get_field(i+1,j+1)) is not None:
-                possible_beatings.append(self.get_field(i+1,j+1))
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i+1, j+1)):
+                    possible_beatings.append(self.get_field(i+1,j+1))
             if i-1 in range(1,9) and j+1 in range(1,9) and board.get_piece_by_field(self.get_field(i-1,j+1)) is not None:
-                possible_beatings.append(self.get_field(i-1,j+1))
+                if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i-1, j+1)):
+                    possible_beatings.append(self.get_field(i-1,j+1))
         return possible_moves, possible_beatings
 

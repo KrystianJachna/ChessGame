@@ -51,7 +51,7 @@ def main():
                         piece = None
                         prev_x, prev_y = x,y
 
-                    else:
+                    else:   
                         highlight_field = False
                         piece = None
         #todo logika gry
