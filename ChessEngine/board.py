@@ -120,6 +120,9 @@ class Board():
         if self.board[field][1]:
             return self.board[field][1][1]
         return None
+    
+    def get_field_pos(self, field:str) -> tuple[int, int]:
+        return self.board[field][0]
         
     def highlight_field(self, x:int, y:int) -> None:
         highlight_color = (255, 255, 0) # zolty
@@ -160,24 +163,108 @@ class Board():
     def is_free(self, field: str) -> bool:
         return self.board is None
     
-    def move_piece(self, prev_field:str, to_field:str) -> None: #todo zwraca zbita bierke
+    def move_piece(self, prev_field:str, to_field:str) -> str | None: #todo zwraca zbita bierke
         #* specjalna obsluga piona
+        promotion_field = None
+
         if isinstance(self.board[prev_field][1][0], Piece.WhitePawn) or isinstance(self.board[prev_field][1][0], Piece.BlackPawn):
             self.board[prev_field][1][0].first_move = False
+            if to_field[1] == '8' or to_field[1] == '1':
+                promotion_field = to_field
         self.board[to_field][1] = copy(self.board[prev_field][1])
         x,y = self.board[to_field][0]
         self.board[to_field][1][0].change_pos(x,y)
         self.board[prev_field][1] = None
+        
+        return promotion_field
+    
+    def set_piece_on_field(self, piece: Piece, field: str, color: str):
+        self.board[field][1] = (piece, color)
+    
+def draw_promotion_possibilites(x: int, y: int, pawn_promotion_field, screen) -> tuple[int, int, int, int, str, str]:
+    green_color = (0, 70,  0) # dark green
+    black_color = (0, 0,  0 ) # dark green
+    images = ImagesLoader()
 
-def draw_window(board: pygame.display, highlight_field:bool, x:int, y:int, piece:Piece) -> None:
+    rect_width, rect_height = 90, 390
+    rect_x = x + 5
+    #* Promocja bialego piona
+    if pawn_promotion_field[1] == '8': 
+        rect_y = y + 105
+        pieces = [Piece.Queen(x, y + 100, images.WHITE_PIECES['queen']),\
+                    Piece.Knight(x, y+200, images.WHITE_PIECES['knight']),\
+                        Piece.Bishop(x, y + 300, images.WHITE_PIECES['bishop']),\
+                        Piece.Rook(x, y + 400, images.WHITE_PIECES['rook'])]
+        color = 'white'
+    #* Promocja czarnego piona
+    else:
+        rect_y = y - 395
+        pieces = [Piece.Queen(x, y - 400, images.BLACK_PIECES['queen']),\
+                    Piece.Knight(x, y-300, images.BLACK_PIECES['knight']),\
+                        Piece.Bishop(x, y - 200, images.BLACK_PIECES['bishop']),\
+                        Piece.Rook(x, y - 100, images.BLACK_PIECES['rook'])]   
+        color = 'black'             
+
+    pygame.draw.rect(screen, black_color, (rect_x - 3, rect_y - 3, rect_width + 6, rect_height + 6), border_radius=20)
+    pygame.draw.rect(screen, green_color, (rect_x, rect_y, rect_width, rect_height), border_radius=20)
+    if pawn_promotion_field[1] == '8': 
+        for i in range(2,5):
+            pygame.draw.rect(screen, black_color, (x + 2, y + i * 100 , 100 - 4, 3))
+    else:
+        for i in range(1,4):
+            pygame.draw.rect(screen, black_color, (x + 2, y - i * 100 , 100 - 4, 3))
+    for piece in pieces:
+        piece.draw(screen)
+
+    return rect_x, rect_y, rect_width, rect_height, color, pawn_promotion_field
+
+
+
+def draw_window(board: Board, highlight_field:bool, x:int, y:int, piece:Piece, pawn_promotion_field:str|None, screen) -> None:
+    box = None
     board.draw_board()
     if highlight_field:
         board.highlight_field(x,y) 
     board.draw_pieces()
+    if pawn_promotion_field:
+            x,y = board.get_field_pos(pawn_promotion_field)
+            board.highlight_field(x,y) 
+            box = draw_promotion_possibilites(x, y, pawn_promotion_field, screen)
+            #todo draw promotion possibilites and return its 
+
     if piece:
         possible_moves, possible_beatings = piece.get_possible_moves(board.get_field(x,y), board)
         for field in possible_moves:
             board.highlight_possible_move(field)
         for field in possible_beatings:
             board.highlight_possible_beat(field)
+    
+    return box
+
+def promote_pawn(x:int, y:int, box:tuple[int,int,int,int,int, str, str], board:Board) -> bool:
+    rect_x, rect_y, rect_width, rect_height, color, pawn_promotion_field = box
+    rect_width += rect_x
+    rect_height += rect_y
+    field = board.get_field(x, y)
+    field_pos_x, field_pos_y = board.get_field_pos(pawn_promotion_field)
+    images = ImagesLoader()
+
+    if color == 'white':
+        pieces_images = {'queen' : images.WHITE_PIECES['queen'], 'knight' : images.WHITE_PIECES['knight'],\
+                         'bishop' : images.WHITE_PIECES['bishop'], 'rook' : images.WHITE_PIECES['rook']}
+    else:
+        pieces_images = {'queen' : images.BLACK_PIECES['queen'], 'knight' : images.BLACK_PIECES['knight'],\
+                         'bishop' : images.BLACK_PIECES['bishop'], 'rook' : images.BLACK_PIECES['rook']}
+
+    if rect_x <= x <= rect_width and rect_y <= y <= rect_height:
+        if rect_y <= y <= rect_y + 100:
+            board.set_piece_on_field(Piece.Queen(field_pos_x, field_pos_y, pieces_images['queen']), pawn_promotion_field, color)
+        elif rect_y <= y <= rect_y + 200:
+            board.set_piece_on_field(Piece.Knight(field_pos_x, field_pos_y, pieces_images['knight']), pawn_promotion_field, color)
+        elif rect_y <= y <= rect_y + 300:
+            board.set_piece_on_field(Piece.Bishop(field_pos_x, field_pos_y, pieces_images['bishop']), pawn_promotion_field, color)
+        else:
+            board.set_piece_on_field(Piece.Rook(field_pos_x, field_pos_y, pieces_images['rook']), pawn_promotion_field, color)
+        return True
+    return False
 

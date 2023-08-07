@@ -1,7 +1,7 @@
 # Game Logic
 
 import pygame
-from ChessEngine.board import Board, draw_window
+from ChessEngine.board import Board, draw_window, promote_pawn
 from ChessEngine.piece import  Piece
 from ChessEngine.images_loader import ImagesLoader
 
@@ -27,37 +27,40 @@ def main():
     highlight_field = False
     x,y, piece  = None, None, None
     prev_x, prev_y = 163, 172
+    pawn_promotion_field = None
+    box = None
 
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                #print(highlight_field)
                 if pygame.mouse.get_pressed()[0]:
                     x, y = pygame.mouse.get_pos()
                     field = board.get_field(x,y)
 
-                    if board.get_piece_color(x, y) == current_player:
+                    if pawn_promotion_field:
+                        if promote_pawn(x, y, box, board):
+                            pawn_promotion_field = None
+                    elif board.get_piece_color(x, y) == current_player:
                         prev_x, prev_y = x, y
                         highlight_field = True
                         piece = board.get_piece(x, y)
                     elif highlight_field and field in\
                           board.get_piece(prev_x,prev_y).get_possible_moves(board.get_field(prev_x, prev_y), board)[0] \
                           or field in board.get_piece(prev_x,prev_y).get_possible_moves(board.get_field(prev_x, prev_y), board)[1]:
-                        board.move_piece(board.get_field(prev_x, prev_y), board.get_field(x,y))
+                        pawn_promotion_field = board.move_piece(board.get_field(prev_x, prev_y), board.get_field(x,y))
                         highlight_field = False
                         current_player = "white" if current_player == "black" else "black"
                         piece = None
                         prev_x, prev_y = x,y
-
                     else:   
                         highlight_field = False
                         piece = None
         #todo logika gry
         #todo sprawdzanie stanu gry (szach, mat, pat, ...)
         #* Wyswietlanie
-        draw_window(board, highlight_field, x, y, piece)
+        box = draw_window(board, highlight_field, x, y, piece, pawn_promotion_field, screen)
         pygame.display.flip()
         clock.tick(FPS)
 
