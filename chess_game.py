@@ -49,8 +49,10 @@ def main():
                     elif highlight_field and field in\
                           board.get_piece(prev_x,prev_y).get_possible_moves(board.get_field(prev_x, prev_y), board)[0] \
                           or field in board.get_piece(prev_x,prev_y).get_possible_moves(board.get_field(prev_x, prev_y), board)[1]:
-                        pawn_promotion_field = board.move_piece(board.get_field(prev_x, prev_y), board.get_field(x,y))
+                        pawn_promotion_field, en_passant_fields = board.move_piece(board.get_field(prev_x, prev_y), board.get_field(x,y))
+                        board.flag_enpassant_beatings(en_passant_fields)
                         highlight_field = False
+                        board.turn_off_enpassant_beatings(current_player)
                         current_player = "white" if current_player == "black" else "black"
                         piece = None
                         prev_x, prev_y = x,y

@@ -254,11 +254,12 @@ class Knight(Piece):
 
         return possible_moves, possible_beatings
 
-#todo bicie w przelocie na pierwszym, promocja
+#todo bicie w przelocie na pierwszym
 class BlackPawn(Piece):
     def __init__(self, x : int, y : int, surface_to_draw : Surface) -> None:
         super().__init__(x, y, surface_to_draw)
         self.first_move : bool = True
+        self.en_passant_beatings : list = []
 
     def get_possible_moves(self, current_field, board) -> tuple[list[str], list[str]]:
         i,j = self.find_pos(current_field)
@@ -289,15 +290,17 @@ class BlackPawn(Piece):
             if i-1 in range(1,9) and j-1 in range(1,9) and board.get_piece_by_field(self.get_field(i-1,j-1)) is not None:
                 if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i+1, j-1)):
                     possible_beatings.append(self.get_field(i-1,j-1))
+        possible_beatings += self.en_passant_beatings
         return possible_moves, possible_beatings
 
 
-#todo bicie w przelocie na pierwszym, promocja
+#todo bicie w przelocie na pierwszym
 class WhitePawn(Piece):
     def __init__(self, x : int, y : int, surface_to_draw : Surface) -> None:
         super().__init__(x, y, surface_to_draw)
         self.first_move : bool = True
-        self.passant : bool = False         
+        self.en_passant_beatings : list = []
+              
 
     def get_possible_moves(self, current_field, board) -> tuple[list[str], list[str]]:
         i,j = self.find_pos(current_field)
@@ -328,5 +331,6 @@ class WhitePawn(Piece):
             if i-1 in range(1,9) and j+1 in range(1,9) and board.get_piece_by_field(self.get_field(i-1,j+1)) is not None:
                 if board.get_piece_color_by_field(current_field) != board.get_piece_color_by_field(self.get_field(i-1, j+1)):
                     possible_beatings.append(self.get_field(i-1,j+1))
-        return possible_moves, possible_beatings
+        possible_beatings += self.en_passant_beatings
+        return possible_moves, possible_beatings 
 

@@ -161,25 +161,79 @@ class Board():
         self.screen.blit(highlight_surface, (center_x, center_y))
 
     def is_free(self, field: str) -> bool:
-        return self.board is None
+        return self.board[field][1] is None
     
-    def move_piece(self, prev_field:str, to_field:str) -> str | None: #todo zwraca zbita bierke
+    #todo zwraca zbita bierke do wyswietlenia
+    def move_piece(self, prev_field:str, to_field:str) -> str | None: 
         #* specjalna obsluga piona
         promotion_field = None
+        alphabet = ['','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+        fields_to_flag_enpassant = []
 
         if isinstance(self.board[prev_field][1][0], Piece.WhitePawn) or isinstance(self.board[prev_field][1][0], Piece.BlackPawn):
             self.board[prev_field][1][0].first_move = False
             if to_field[1] == '8' or to_field[1] == '1':
                 promotion_field = to_field
+            if to_field[1] == '5' and prev_field[1] == '7' or to_field[1] == '4' and prev_field[1] == '2':
+                # en passant
+                current_pos = alphabet.index(to_field[0])
+                fields_to_flag_enpassant = []
+                type_moved_piece = type(self.board[prev_field][1][0])
+                #left
+                if current_pos - 1 in range(1,9) and not self.is_free(alphabet[current_pos-1] + to_field[1]):
+                    moving_piece_color = self.get_piece_color_by_field(prev_field)
+                    left_piece_color = self.get_piece_color_by_field(alphabet[current_pos-1] + to_field[1])
+                    if moving_piece_color != left_piece_color:
+                        if to_field[1] == '5':
+                            fields_to_flag_enpassant.append((alphabet[current_pos-1] + to_field[1], to_field[0] + str(int(to_field[1]) + 1)))
+                        else:
+                            fields_to_flag_enpassant.append((alphabet[current_pos-1] + to_field[1], to_field[0] + str(int(to_field[1]) - 1)))
+                #right
+                if current_pos + 1 in range(1,9) and not self.is_free(alphabet[current_pos+1] + to_field[1]):
+                    moving_piece_color = self.get_piece_color_by_field(prev_field)
+                    left_piece_color = self.get_piece_color_by_field(alphabet[current_pos+1] + to_field[1])
+                    if moving_piece_color != left_piece_color:
+                        if to_field[1] == '5':
+                            fields_to_flag_enpassant.append((alphabet[current_pos+1] + to_field[1], to_field[0] + str(int(to_field[1]) + 1)))
+                        else:
+                            fields_to_flag_enpassant.append((alphabet[current_pos+1] + to_field[1], to_field[0] + str(int(to_field[1]) - 1)))
+           
+            if to_field[1] == '6' or to_field[1] == '3':
+                if isinstance(self.get_piece_by_field(to_field[0] + str(int(to_field[1]) - 1)), Piece.BlackPawn) and self.get_piece_color_by_field(prev_field) == 'white':
+                        self.set_piece_on_field(None, to_field[0] + str(int(to_field[1]) - 1), None)
+                elif isinstance(self.get_piece_by_field(to_field[0] + str(int(to_field[1]) + 1)), Piece.WhitePawn)and self.get_piece_color_by_field(prev_field) == 'black':
+                    self.set_piece_on_field(None, to_field[0] + str(int(to_field[1]) + 1), None)
+
+            
         self.board[to_field][1] = copy(self.board[prev_field][1])
         x,y = self.board[to_field][0]
         self.board[to_field][1][0].change_pos(x,y)
         self.board[prev_field][1] = None
         
-        return promotion_field
+        return promotion_field, fields_to_flag_enpassant
     
-    def set_piece_on_field(self, piece: Piece, field: str, color: str):
-        self.board[field][1] = (piece, color)
+    def turn_off_enpassant_beatings(self, color):
+        if color == 'black':
+            for  _, piece in self.board.values():
+                if piece:
+                    if isinstance(piece[0], Piece.BlackPawn):
+                        piece[0].en_passant_beatings = []
+        else:
+            for  _, piece in self.board.values():
+                if piece:
+                    if isinstance(piece[0], Piece.WhitePawn):
+                        piece[0].en_passant_beatings = []
+    
+
+    def set_piece_on_field(self, piece, field: str, color: str| None):
+        if piece is None and color is None:
+            self.board[field][1] = None
+        else:
+            self.board[field][1] = (piece, color)
+    
+    def flag_enpassant_beatings(self, field_beatings):
+        for field, beating in field_beatings:
+            self.board[field][1][0].en_passant_beatings.append(beating)
     
 def draw_promotion_possibilites(x: int, y: int, pawn_promotion_field, screen) -> tuple[int, int, int, int, str, str]:
     green_color = (0, 70,  0) # dark green
@@ -268,3 +322,7 @@ def promote_pawn(x:int, y:int, box:tuple[int,int,int,int,int, str, str], board:B
         return True
     return False
 
+
+def add_enpassant_beatings(board: Board, fields = list[str]):
+    for field in fields:
+        board.board[field][1]
